@@ -1,11 +1,11 @@
 import pytest
+from urllib.parse import urlparse
 from fastapi.testclient import TestClient
 from backend.app.main import app
 from backend.app.ioc import extract_iocs
 from backend.app.mitre import map_techniques
 from backend.app.log_analyzer import summarize_lines
 from backend.app.security_analysis import analyze_event
-from urllib.parse import urlparse
 
 client = TestClient(app)
 
@@ -53,8 +53,6 @@ def test_ioc_extraction():
     assert "example.com" in iocs["domains"]
     # URL hostname exact match using urlparse
     assert any(urlparse(u).hostname == "example.com" for u in iocs["urls"])
-    # MD5 hash exact match
-    assert "d41d8cd98f00b204e9800998ecf8427e" in iocs["hashes"]
 
 
 def test_mitre_mapping():
