@@ -5,6 +5,7 @@ from backend.app.ioc import extract_iocs
 from backend.app.mitre import map_techniques
 from backend.app.log_analyzer import summarize_lines
 from backend.app.security_analysis import analyze_event
+from urllib.parse import urlparse
 
 client = TestClient(app)
 
@@ -46,8 +47,14 @@ def test_validation_empty_and_oversize():
 def test_ioc_extraction():
     text = "Contact http://example.com from 203.0.113.5 with hash d41d8cd98f00b204e9800998ecf8427e"
     iocs = extract_iocs(text)
+    # IPv4 exact match
     assert "203.0.113.5" in iocs["ipv4"]
-    assert any("example.com" in d for d in iocs["domains"] + iocs["urls"])
+    # Domain exact match
+    assert "example.com" in iocs["domains"]
+    # URL hostname exact match using urlparse
+    assert any(urlparse(u).hostname == "example.com" for u in iocs["urls"])
+    # MD5 hash exact match
+    assert "d41d8cd98f00b204e9800998ecf8427e" in iocs["hashes"]
 
 
 def test_mitre_mapping():
