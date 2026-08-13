@@ -51,8 +51,10 @@ def test_ioc_extraction():
     assert "203.0.113.5" in iocs["ipv4"]
     # Domain exact match
     assert "example.com" in iocs["domains"]
-    # URL hostname exact match using urlparse
+    # URL hostname exact match using urlparse (validates URL structure)
     assert any(urlparse(u).hostname == "example.com" for u in iocs["urls"])
+    # Hash exact match
+    assert "d41d8cd98f00b204e9800998ecf8427e" in iocs["hashes"]
 
 
 def test_mitre_mapping():
