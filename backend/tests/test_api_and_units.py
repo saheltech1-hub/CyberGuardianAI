@@ -1,11 +1,11 @@
 import pytest
 from urllib.parse import urlparse
 from fastapi.testclient import TestClient
-from backend.app.main import app
-from backend.app.ioc import extract_iocs
-from backend.app.mitre import map_techniques
-from backend.app.log_analyzer import summarize_lines
-from backend.app.security_analysis import analyze_event
+from app.main import app
+from app.ioc import extract_iocs
+from app.mitre import map_techniques
+from app.log_analyzer import summarize_lines
+from app.security_analysis import analyze_event
 
 client = TestClient(app)
 
