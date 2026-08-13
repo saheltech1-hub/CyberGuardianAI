@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
+from .security_lab import triage
+from .security_analysis import analyze_event
 
 app = FastAPI(title="CyberGuardianAI", version="0.1.0")
 
@@ -14,6 +16,12 @@ class AnalyzeResponse(BaseModel):
     recommendations: list[str]
 
 
+class TriageResponse(AnalyzeResponse):
+    iocs: dict
+    mitre: list
+    log_summary: dict
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok", "service": "CyberGuardianAI"}
@@ -21,31 +29,22 @@ def health() -> dict[str, str]:
 
 @app.post("/api/v1/analyze", response_model=AnalyzeResponse)
 def analyze(request: AnalyzeRequest) -> AnalyzeResponse:
-    text = request.text.lower()
-    indicators: list[str] = []
-
-    keywords = {
-        "powershell": "PowerShell reference",
-        "cmd.exe": "Windows command shell reference",
-        "curl": "curl/network utility reference",
-        "wget": "wget/network utility reference",
-        "base64": "Base64 encoding reference",
-        "credential": "Credential-related reference",
-        "password": "Password-related reference",
-    }
-
-    for keyword, description in keywords.items():
-        if keyword in text:
-            indicators.append(description)
-
-    risk = "low" if not indicators else "medium"
-    recommendations = [
-        "Validate the event against trusted logs and endpoint telemetry.",
-        "Do not treat keyword matches alone as proof of compromise.",
-    ]
-
+    result = analyze_event(request.text)
     return AnalyzeResponse(
-        risk=risk,
-        indicators=indicators,
-        recommendations=recommendations,
+        risk=result.get("risk", "low"),
+        indicators=result.get("indicators", []),
+        recommendations=result.get("recommendations", []),
+    )
+
+
+@app.post("/api/v1/triage", response_model=TriageResponse)
+def api_triage(request: AnalyzeRequest) -> TriageResponse:
+    result = triage(request.text)
+    return TriageResponse(
+        risk=result.get("risk", "low"),
+        indicators=result.get("indicators", []),
+        recommendations=result.get("recommendations", []),
+        iocs=result.get("iocs", {}),
+        mitre=result.get("mitre", []),
+        log_summary=result.get("log_summary", {}),
     )
